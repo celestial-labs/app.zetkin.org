@@ -14,6 +14,7 @@ import Environment from './env/Environment';
 import { EnvProvider } from 'core/env/EnvContext';
 import { EventPopperProvider } from 'features/events/components/EventPopper/EventPopperProvider';
 import { MessageList } from 'utils/locale';
+import { pluginManager, PluginProvider } from './plugins';
 import { Store } from './store';
 import { oldThemeWithLocale } from '../theme';
 import { ZetkinUser } from 'utils/types/zetkin';
@@ -67,33 +68,35 @@ const Providers: FC<ProvidersProps> = ({
 
   return (
     <ReduxProvider store={store}>
-      <EnvProvider env={env}>
-        <UserProvider user={user}>
-          <StyledEngineProvider injectFirst>
-            <CacheProvider value={cache.current}>
-              <ThemeProvider theme={oldThemeWithLocale(lang)}>
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <IntlProvider
-                    defaultLocale="en"
-                    locale={lang}
-                    messages={messages}
-                  >
-                    <ZUISnackbarProvider>
-                      <ZUIConfirmDialogProvider>
-                        <EventPopperProvider>
-                          <DndProvider backend={HTML5Backend}>
-                            <Suspense>{children}</Suspense>
-                          </DndProvider>
-                        </EventPopperProvider>
-                      </ZUIConfirmDialogProvider>
-                    </ZUISnackbarProvider>
-                  </IntlProvider>
-                </LocalizationProvider>
-              </ThemeProvider>
-            </CacheProvider>
-          </StyledEngineProvider>
-        </UserProvider>
-      </EnvProvider>
+      <PluginProvider pluginManager={pluginManager}>
+        <EnvProvider env={env}>
+          <UserProvider user={user}>
+            <StyledEngineProvider injectFirst>
+              <CacheProvider value={cache.current}>
+                <ThemeProvider theme={oldThemeWithLocale(lang)}>
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <IntlProvider
+                      defaultLocale="en"
+                      locale={lang}
+                      messages={messages}
+                    >
+                      <ZUISnackbarProvider>
+                        <ZUIConfirmDialogProvider>
+                          <EventPopperProvider>
+                            <DndProvider backend={HTML5Backend}>
+                              <Suspense>{children}</Suspense>
+                            </DndProvider>
+                          </EventPopperProvider>
+                        </ZUIConfirmDialogProvider>
+                      </ZUISnackbarProvider>
+                    </IntlProvider>
+                  </LocalizationProvider>
+                </ThemeProvider>
+              </CacheProvider>
+            </StyledEngineProvider>
+          </UserProvider>
+        </EnvProvider>
+      </PluginProvider>
     </ReduxProvider>
   );
 };

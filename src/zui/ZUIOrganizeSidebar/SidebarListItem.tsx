@@ -10,24 +10,27 @@ import {
 import messageIds from '../l10n/messageIds';
 import { useMessages } from 'core/i18n';
 
+export type SidebarMessageKey =
+  | 'people'
+  | 'projects'
+  | 'journeys'
+  | 'geography'
+  | 'search'
+  | 'settings'
+  | 'tags'
+  | 'overview';
+
 export interface SidebarListItemProps {
   icon: JSX.Element;
-  name:
-    | 'people'
-    | 'projects'
-    | 'journeys'
-    | 'geography'
-    | 'search'
-    | 'settings'
-    | 'tags'
-    | 'overview';
+  name?: SidebarMessageKey;
+  label?: string;
   open: boolean;
   selected?: boolean;
   onClick?: () => void;
 }
 
 const SidebarListItem = forwardRef<HTMLDivElement, SidebarListItemProps>(
-  ({ icon, name, onClick, open, selected, ...restProps }, ref) => {
+  ({ icon, label, name, onClick, open, selected, ...restProps }, ref) => {
     const theme = useTheme();
     const messages = useMessages(messageIds);
 
@@ -35,6 +38,9 @@ const SidebarListItem = forwardRef<HTMLDivElement, SidebarListItemProps>(
       // Differentiate size of icon for open/closed states
       fontSize: open ? 'small' : 'medium',
     });
+
+    const labelText =
+      label || (name && messages.organizeSidebar[name]()) || '';
 
     return (
       <ListItemButton
@@ -77,7 +83,7 @@ const SidebarListItem = forwardRef<HTMLDivElement, SidebarListItemProps>(
             fontWeight: selected ? 700 : 'normal',
           }}
         >
-          {messages.organizeSidebar[name]()}
+          {labelText}
         </Typography>
       </ListItemButton>
     );

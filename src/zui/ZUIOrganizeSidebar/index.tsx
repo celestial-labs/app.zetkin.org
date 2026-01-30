@@ -49,6 +49,7 @@ import OrganizationSwitcher from 'features/organizations/components/Organization
 import SearchDialog from 'features/search/components/SearchDialog';
 import SidebarListItem from './SidebarListItem';
 import useOrganization from 'features/organizations/hooks/useOrganization';
+import { usePlugins } from 'core/plugins';
 import ZUIFuture from 'zui/ZUIFuture';
 import ZUIUserAvatar from 'zui/ZUIUserAvatar';
 import useFeature from 'utils/featureFlags/useFeature';
@@ -220,6 +221,8 @@ const ZUIOrganizeSidebar = ({
   const organizationFuture = useOrganization(orgId);
   const hasAreas = useFeature(AREAS, orgId);
   const hasSettings = useFeature(OFFICIALS, orgId);
+  const pluginManager = usePlugins();
+  const pluginItems = pluginManager.getSidebarItems();
 
   const handleExpansion = () => {
     setChecked(!checked);
@@ -527,6 +530,30 @@ const ZUIOrganizeSidebar = ({
                   </NextLink>
                 );
               })}
+              {pluginItems.map((item) => (
+                <NextLink
+                  key={item.name}
+                  href={item.href.replace('[orgId]', (orgId ?? '').toString())}
+                  legacyBehavior
+                  passHref
+                >
+                  <Tooltip
+                    arrow
+                    placement="right"
+                    title={!open ? item.label : undefined}
+                  >
+                    <SidebarListItem
+                      key={item.name}
+                      icon={item.icon}
+                      label={item.label}
+                      open={open}
+                      selected={router.asPath.startsWith(
+                        item.href.replace('[orgId]', (orgId ?? '').toString())
+                      )}
+                    />
+                  </Tooltip>
+                </NextLink>
+              ))}
             </List>
           </Box>
           <Box flexGrow={0}>
