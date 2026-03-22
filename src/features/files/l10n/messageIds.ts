@@ -14,7 +14,14 @@ export default makeMessages('feat.files', {
   libraryDialog: {
     preview: {
       backButton: m('Back to library'),
+      cropFormats: {
+        calendar: m('Calendar preview'),
+        list: m('List view'),
+        public: m('Public page'),
+      },
+      saveButton: m('Crop & use'),
       useButton: m('Use'),
+      zoom: m('Zoom'),
     },
     title: m('Library'),
   },
