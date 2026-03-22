@@ -1,4 +1,5 @@
 import '../styles.css';
+import 'react-easy-crop/react-easy-crop.css';
 
 import { AppProps } from 'next/app';
 import CssBaseline from '@mui/material/CssBaseline';

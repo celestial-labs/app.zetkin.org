@@ -1,5 +1,5 @@
 import { FC, useState } from 'react';
-import Image from 'next/image';
+import Cropper, { Area, MediaSize } from 'react-easy-crop';
 import { Box, Button, Typography } from '@mui/material';
 
 import messageIds from 'features/files/l10n/messageIds';
@@ -15,6 +15,8 @@ type Props = {
 
 const FilePreview: FC<Props> = ({ file, onBack, onSelect }) => {
   const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
 
   return (
     <Box display="flex" flexDirection="column" height="100%">
@@ -26,25 +28,19 @@ const FilePreview: FC<Props> = ({ file, onBack, onSelect }) => {
             position: 'relative',
           }}
         >
-          <Image
-            alt={file.original_name}
-            height="800"
-            onLoad={(e) => {
-              if (e.target instanceof HTMLImageElement) {
-                setDimensions({
-                  height: e.target.naturalHeight,
-                  width: e.target.naturalWidth,
-                });
-              }
+          <Cropper
+            crop={crop}
+            image={file.url}
+            onCropChange={setCrop}
+            onCropComplete={(_croppedArea: Area, _croppedAreaPixels: Area) => {}}
+            onMediaLoaded={(mediaSize: MediaSize) => {
+              setDimensions({
+                height: mediaSize.naturalHeight,
+                width: mediaSize.naturalWidth,
+              });
             }}
-            src={file.url}
-            style={{
-              height: '100%',
-              objectFit: 'contain',
-              width: '100%',
-            }}
-            unoptimized
-            width="800"
+            onZoomChange={setZoom}
+            zoom={zoom}
           />
         </TransparentGridBackground>
         <Typography color="secondary" mt={1} textAlign="center" variant="body2">
