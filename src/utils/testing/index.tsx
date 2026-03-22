@@ -14,6 +14,7 @@ import { EnvProvider } from 'core/env/EnvContext';
 import IApiClient from 'core/api/client/IApiClient';
 import RosaLuxemburgUser from '../../../integrationTesting/mockData/users/RosaLuxemburgUser';
 import oldTheme from 'theme';
+import { pluginManager, PluginProvider } from 'core/plugins';
 import { Store } from 'core/store';
 import { UserProvider } from 'core/env/UserContext';
 import mockApiClient from './mocks/mockApiClient';
@@ -43,11 +44,13 @@ const ZetkinAppProviders: FC<ZetkinAppProvidersProps> = ({ children }) => {
                 throw err;
               }}
             >
-              <EnvProvider env={env}>
-                <CssBaseline />
+              <PluginProvider pluginManager={pluginManager}>
+                <EnvProvider env={env}>
+                  <CssBaseline />
 
-                {children}
-              </EnvProvider>
+                  {children}
+                </EnvProvider>
+              </PluginProvider>
             </IntlProvider>
           </LocalizationProvider>
         </ThemeProvider>
@@ -97,9 +100,11 @@ export const makeWrapper = (
 
     return (
       <ReduxProvider store={store}>
-        <EnvProvider env={env}>
-          <UserProvider user={RosaLuxemburgUser}>{children}</UserProvider>
-        </EnvProvider>
+        <PluginProvider pluginManager={pluginManager}>
+          <EnvProvider env={env}>
+            <UserProvider user={RosaLuxemburgUser}>{children}</UserProvider>
+          </EnvProvider>
+        </PluginProvider>
       </ReduxProvider>
     );
   };
