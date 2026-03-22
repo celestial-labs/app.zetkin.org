@@ -13,15 +13,19 @@ import {
   Typography,
 } from '@mui/material';
 
+import { useAppDispatch } from 'core/hooks';
+import { useMessages } from 'core/i18n';
+import { fileUploaded } from 'features/files/store';
 import ZUIToggleButton from './components/ZUIToggleButton';
+import messageIds from './l10n/messageIds';
 import { ZetkinFile } from 'utils/types/zetkin';
 
 type Preset = 'public' | 'list' | 'calendar';
 
-const PRESETS: Record<Preset, { aspect: number; label: string }> = {
-  calendar: { aspect: 4, label: 'Kalender-Vorschau' },
-  list: { aspect: 2, label: 'Listenansicht' },
-  public: { aspect: 2, label: 'Öffentliche Seite' },
+const PRESET_ASPECTS: Record<Preset, number> = {
+  calendar: 4,
+  list: 2,
+  public: 2,
 };
 
 async function getCroppedImg(imageSrc: string, pixelCrop: Area): Promise<Blob> {
@@ -51,7 +55,8 @@ async function getCroppedImg(imageSrc: string, pixelCrop: Area): Promise<Blob> {
   );
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error('Canvas toBlob failed'))),
+      (blob) =>
+        blob ? resolve(blob) : reject(new Error('Canvas toBlob failed')),
       'image/jpeg',
       0.9
     );
@@ -73,21 +78,26 @@ const ZUIImageCropDialog: React.FC<ZUIImageCropDialogProps> = ({
   open,
   orgId,
 }) => {
+  const dispatch = useAppDispatch();
+  const messages = useMessages(messageIds);
+
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [activePreset, setActivePreset] = useState<Preset>('public');
   const [uploading, setUploading] = useState(false);
 
-  const aspect = PRESETS[activePreset].aspect;
+  const aspect = PRESET_ASPECTS[activePreset];
 
   const handleCropComplete = useCallback((_: Area, areaPixels: Area) => {
     setCroppedAreaPixels(areaPixels);
   }, []);
 
   const handlePresetChange = (value: string) => {
-    if (value && value in PRESETS) {
+    if (value && value in PRESET_ASPECTS) {
       setActivePreset(value as Preset);
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
     }
   };
 
@@ -105,21 +115,29 @@ const ZUIImageCropDialog: React.FC<ZUIImageCropDialogProps> = ({
         method: 'POST',
       });
       const json = await res.json();
-      onCropComplete(json.data as ZetkinFile);
+      const zetkinFile = json.data as ZetkinFile;
+      dispatch(fileUploaded(zetkinFile));
+      onCropComplete(zetkinFile);
     } finally {
       setUploading(false);
     }
   };
 
-  const toggleOptions = [
-    { label: PRESETS.public.label, value: 'public' },
-    { label: PRESETS.list.label, value: 'list' },
-    { label: PRESETS.calendar.label, value: 'calendar' },
-  ];
+  const presetLabels: Record<Preset, string> = {
+    calendar: messages.editableImage.cropDialog.presets.calendar(),
+    list: messages.editableImage.cropDialog.presets.list(),
+    public: messages.editableImage.cropDialog.presets.public(),
+  };
+
+  const toggleOptions = (Object.keys(PRESET_ASPECTS) as Preset[]).map(
+    (key) => ({ label: presetLabels[key], value: key })
+  );
+
+  const presetOrder: Preset[] = ['public', 'list', 'calendar'];
 
   return (
     <Dialog fullWidth maxWidth="md" onClose={onClose} open={open}>
-      <DialogTitle>Bild zuschneiden</DialogTitle>
+      <DialogTitle>{messages.editableImage.cropDialog.title()}</DialogTitle>
       <DialogContent sx={{ pb: 1 }}>
         <Box
           sx={{
@@ -130,25 +148,12 @@ const ZUIImageCropDialog: React.FC<ZUIImageCropDialogProps> = ({
           }}
         >
           {/* Preset format buttons */}
-          <Box
-            sx={{
-              alignItems: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 1,
-              width: '100%',
-            }}
-          >
-            <Typography color="text.secondary" variant="body2">
-              Format wählen
-            </Typography>
-            <ZUIToggleButton
-              onChange={handlePresetChange}
-              options={toggleOptions}
-              size="small"
-              value={activePreset}
-            />
-          </Box>
+          <ZUIToggleButton
+            onChange={handlePresetChange}
+            options={toggleOptions}
+            size="small"
+            value={activePreset}
+          />
 
           {/* Format preview strip */}
           <Box
@@ -157,40 +162,37 @@ const ZUIImageCropDialog: React.FC<ZUIImageCropDialogProps> = ({
               display: 'flex',
               gap: 3,
               justifyContent: 'center',
-              width: '100%',
             }}
           >
-            {(Object.entries(PRESETS) as [Preset, { aspect: number; label: string }][]).map(
-              ([key, preset]) => (
+            {presetOrder.map((key) => (
+              <Box
+                key={key}
+                onClick={() => handlePresetChange(key)}
+                sx={{
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 0.5,
+                  opacity: activePreset === key ? 1 : 0.4,
+                  transition: 'opacity 0.2s',
+                }}
+              >
                 <Box
-                  key={key}
-                  onClick={() => setActivePreset(key)}
-                  sx={{
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 0.5,
-                    opacity: activePreset === key ? 1 : 0.4,
-                    transition: 'opacity 0.2s',
-                  }}
-                >
-                  <Box
-                    sx={(theme) => ({
-                      backgroundColor:
-                        activePreset === key
-                          ? theme.palette.primary.main
-                          : theme.palette.grey[400],
-                      borderRadius: 0.5,
-                      height: 32 / preset.aspect,
-                      transition: 'background-color 0.2s',
-                      width: 64,
-                    })}
-                  />
-                  <Typography variant="caption">{preset.label}</Typography>
-                </Box>
-              )
-            )}
+                  sx={(theme) => ({
+                    backgroundColor:
+                      activePreset === key
+                        ? theme.palette.primary.main
+                        : theme.palette.grey[400],
+                    borderRadius: 0.5,
+                    height: 48 / PRESET_ASPECTS[key],
+                    transition: 'background-color 0.2s',
+                    width: 48,
+                  })}
+                />
+                <Typography variant="caption">{presetLabels[key]}</Typography>
+              </Box>
+            ))}
           </Box>
 
           {/* Cropper */}
@@ -219,7 +221,7 @@ const ZUIImageCropDialog: React.FC<ZUIImageCropDialogProps> = ({
           {/* Zoom slider */}
           <Box sx={{ px: 2, width: '100%' }}>
             <Typography gutterBottom color="text.secondary" variant="body2">
-              Zoom
+              {messages.editableImage.cropDialog.zoom()}
             </Typography>
             <Slider
               max={3}
@@ -232,14 +234,20 @@ const ZUIImageCropDialog: React.FC<ZUIImageCropDialogProps> = ({
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Abbrechen</Button>
+        <Button onClick={onClose}>
+          {messages.editableImage.cropDialog.cancel()}
+        </Button>
         <Button
           disabled={uploading || !croppedAreaPixels}
           onClick={handleSave}
           startIcon={uploading ? <CircularProgress size={16} /> : undefined}
           variant="contained"
         >
-          {uploading ? 'Wird gespeichert…' : 'Zuschneiden & Speichern'}
+          {uploading ? (
+            <CircularProgress size={16} />
+          ) : (
+            messages.editableImage.cropDialog.saveButton()
+          )}
         </Button>
       </DialogActions>
     </Dialog>

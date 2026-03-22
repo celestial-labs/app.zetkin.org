@@ -136,6 +136,17 @@ export default makeMessages('zui', {
   },
   editableImage: {
     add: m('Click to add image'),
+    cropDialog: {
+      cancel: m('Cancel'),
+      presets: {
+        calendar: m('Calendar preview'),
+        list: m('List view'),
+        public: m('Public page'),
+      },
+      saveButton: m('Crop & save'),
+      title: m('Crop image'),
+      zoom: m('Zoom'),
+    },
   },
   ellipsisMenu: {
     ariaLabel: m('More options'),
