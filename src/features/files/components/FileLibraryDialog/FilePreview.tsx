@@ -147,6 +147,7 @@ const FilePreview: FC<Props> = ({ file, onBack, onSelect }) => {
             />
           ) : (
             <Cropper
+              key={activeContext}
               aspect={aspectRatio}
               crop={currentState.crop}
               image={file.url}
