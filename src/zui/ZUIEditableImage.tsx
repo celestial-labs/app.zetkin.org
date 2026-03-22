@@ -8,6 +8,7 @@ import messageIds from './l10n/messageIds';
 import { Msg } from 'core/i18n';
 import { useNumericRouteParams } from 'core/hooks';
 import { ZetkinFile } from 'utils/types/zetkin';
+import ZUIImageCropDialog from './ZUIImageCropDialog';
 
 interface ZUIEditableImageProps {
   alt: string;
@@ -21,6 +22,7 @@ const ZUIEditableImage: React.FC<
   const theme = useTheme();
   const { orgId } = useNumericRouteParams();
   const [selecting, setSelecting] = useState(false);
+  const [pendingFile, setPendingFile] = useState<ZetkinFile | null>(null);
 
   return (
     <Box
@@ -87,10 +89,20 @@ const ZUIEditableImage: React.FC<
           setSelecting(false);
         }}
         onSelectFile={(file) => {
-          onFileSelect(file);
+          setPendingFile(file);
           setSelecting(false);
         }}
         open={selecting}
+        orgId={orgId}
+      />
+      <ZUIImageCropDialog
+        imageUrl={pendingFile?.url ?? ''}
+        onClose={() => setPendingFile(null)}
+        onCropComplete={(croppedFile) => {
+          onFileSelect(croppedFile);
+          setPendingFile(null);
+        }}
+        open={pendingFile !== null}
         orgId={orgId}
       />
     </Box>
