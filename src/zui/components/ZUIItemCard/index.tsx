@@ -175,6 +175,7 @@ const ZUIItemCard: FC<ItemCard> = (props) => {
           <Box
             sx={{
               height: '9.375rem',
+              overflow: 'hidden',
             }}
           >
             {hasImageSrc && (
