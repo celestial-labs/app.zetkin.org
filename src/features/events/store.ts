@@ -109,7 +109,7 @@ const eventsSlice = createSlice({
       state.allEventsList.isLoading = true;
     },
     allEventsLoaded: (state, action: PayloadAction<ZetkinEvent[]>) => {
-      state.allEventsList = remoteList(action.payload);
+      state.allEventsList = remoteList(action.payload.map(injectTestCrop));
       state.allEventsList.loaded = new Date().toISOString();
     },
     allEventsUnload: (state) => {
@@ -666,7 +666,7 @@ const eventsSlice = createSlice({
       state,
       action: PayloadAction<ZetkinEventWithStatus[]>
     ) => {
-      state.userEventList = remoteList(action.payload);
+      state.userEventList = remoteList(action.payload.map(injectTestCrop));
       state.userEventList.loaded = new Date().toISOString();
     },
     userResponseAdded: (state, action: PayloadAction<ZetkinEvent>) => {
@@ -718,17 +718,20 @@ const TEST_CROP: EventImageCropSettings = {
   },
 };
 
+// TODO: Remove injectTestCrop once backend returns cover_file_crop
+function injectTestCrop<T extends ZetkinEvent>(event: T): T {
+  return event.cover_file?.id === 46
+    ? { ...event, cover_file_crop: TEST_CROP }
+    : event;
+}
+
 function addEventToState(state: EventsStoreSlice, events: ZetkinEvent[]) {
   events.forEach((event) => {
     const eventListItem = state.eventList.items.find(
       (item) => item.id == event.id
     );
 
-    // TODO: Remove this override once backend returns cover_file_crop
-    const eventToStore =
-      event.cover_file?.id === 46
-        ? { ...event, cover_file_crop: TEST_CROP }
-        : event;
+    const eventToStore = injectTestCrop(event);
 
     if (eventListItem) {
       eventListItem.data = { ...eventListItem.data, ...eventToStore };
