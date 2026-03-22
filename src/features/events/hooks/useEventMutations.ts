@@ -1,4 +1,4 @@
-import { ZetkinEvent } from 'utils/types/zetkin';
+import { EventImageCropSettings, ZetkinEvent } from 'utils/types/zetkin';
 import { eventDeleted, eventUpdate, eventUpdated } from '../store';
 import { useApiClient, useAppDispatch } from 'core/hooks';
 
@@ -13,6 +13,7 @@ export type ZetkinEventPatchBody = Partial<
   cancelled?: string | null;
   contact_id?: number | null;
   cover_file_id?: number | null;
+  cover_file_crop?: EventImageCropSettings | null;
   location_id?: number | null;
   organization_id?: number;
   published?: string | null;

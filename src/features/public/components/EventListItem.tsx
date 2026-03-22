@@ -13,14 +13,33 @@ import { ZetkinEventWithStatus } from '../types';
 import { removeOffset } from 'utils/dateUtils';
 import { timeSpanToString } from 'zui/utils/timeSpanString';
 import { EventSignupButton } from './EventSignupButton';
+import { EventImageCropSettings, ImageContextCropState } from 'utils/types/zetkin';
+
+function cropToStyle(crop: ImageContextCropState): React.CSSProperties {
+  const { height, width, x, y } = crop.croppedAreaPercentages;
+  const posX = width >= 100 ? 50 : (x / (100 - width)) * 100;
+  const posY = height >= 100 ? 50 : (y / (100 - height)) * 100;
+  return {
+    objectFit: 'cover',
+    objectPosition: `${posX}% ${posY}%`,
+    transform: `scale(${crop.zoom})`,
+    transformOrigin: 'center',
+  };
+}
 
 type Props = {
+  cropContext?: keyof EventImageCropSettings;
   event: ZetkinEventWithStatus;
   href?: string;
   onClickSignUp?: (ev: MouseEvent) => void;
 };
 
-const EventListItem: FC<Props> = ({ event, href, onClickSignUp }) => {
+const EventListItem: FC<Props> = ({
+  cropContext = 'eventListItem',
+  event,
+  href,
+  onClickSignUp,
+}) => {
   const intl = useIntl();
   const messages = useMessages(messageIds);
 
@@ -32,11 +51,15 @@ const EventListItem: FC<Props> = ({ event, href, onClickSignUp }) => {
     />,
   ];
 
+  const cropSetting = event.cover_file_crop?.[cropContext];
+  const imageCropStyle = cropSetting ? cropToStyle(cropSetting) : undefined;
+
   return (
     <MyActivityListItem
       actions={actions}
       href={href}
       image={event.cover_file?.url}
+      imageCropStyle={imageCropStyle}
       info={[
         {
           Icon: GroupWorkOutlined,

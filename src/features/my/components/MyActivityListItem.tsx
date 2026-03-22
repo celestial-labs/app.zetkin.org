@@ -10,6 +10,7 @@ type Props = {
   href?: string;
   iconTitle?: OverridableComponent<SvgIconTypeMap<unknown, 'svg'>>;
   image?: string;
+  imageCropStyle?: React.CSSProperties;
   info: {
     Icon: OverridableComponent<SvgIconTypeMap<unknown, 'svg'>>;
     labels: ZUILabelText[];
@@ -22,6 +23,7 @@ const MyActivityListItem: FC<Props> = ({
   href,
   iconTitle,
   image,
+  imageCropStyle,
   info,
   title,
 }) => {
@@ -39,7 +41,7 @@ const MyActivityListItem: FC<Props> = ({
       ))}
       href={href}
       {...(iconTitle ? { icon: iconTitle } : {})}
-      src={image}
+      {...(image ? { imageCropStyle, src: image } : {})}
       title={title}
     />
   );

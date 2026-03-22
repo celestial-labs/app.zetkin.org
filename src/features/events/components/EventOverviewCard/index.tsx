@@ -39,7 +39,12 @@ import {
   makeNaiveTimeString,
   removeOffset,
 } from 'utils/dateUtils';
-import { ZetkinEvent, ZetkinFile, ZetkinLocation } from 'utils/types/zetkin';
+import {
+  EventImageCropSettings,
+  ZetkinEvent,
+  ZetkinFile,
+  ZetkinLocation,
+} from 'utils/types/zetkin';
 
 dayjs.extend(utc);
 
@@ -121,8 +126,14 @@ const EventOverviewCard: FC<EventOverviewCardProps> = ({ data, orgId }) => {
             alt=""
             file={data.cover_file}
             fill
-            onFileSelect={(file: ZetkinFile | null) => {
-              updateEvent({ cover_file_id: file?.id ?? null });
+            onFileSelect={(
+              file: ZetkinFile | null,
+              cropSettings?: EventImageCropSettings
+            ) => {
+              updateEvent({
+                cover_file_crop: cropSettings ?? null,
+                cover_file_id: file?.id ?? null,
+              });
             }}
             style={{ objectFit: 'cover' }}
           />

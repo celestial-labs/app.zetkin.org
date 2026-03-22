@@ -73,6 +73,12 @@ type ImageSrcCard = CardWithoutImage & {
    * The image will be rendered at the top of the card.
    */
   src: string;
+
+  /**
+   * Optional CSS styles to apply to the image (e.g. object-position / transform
+   * computed from saved crop settings).
+   */
+  imageCropStyle?: React.CSSProperties;
 };
 
 type ImageElementCard = CardWithoutImage & {
@@ -176,7 +182,12 @@ const ZUIItemCard: FC<ItemCard> = (props) => {
                 alt={props.title}
                 height={480}
                 src={props.src}
-                style={{ height: '100%', objectFit: 'cover', width: '100%' }}
+                style={{
+                  height: '100%',
+                  objectFit: 'cover',
+                  width: '100%',
+                  ...(props.imageCropStyle ?? {}),
+                }}
                 width={960}
               />
             )}
