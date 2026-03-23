@@ -67,6 +67,18 @@ export interface ZetkinEventResponse {
   response_date: string;
 }
 
+export type ImageContextCropState = {
+  crop: { x: number; y: number };
+  zoom: number;
+  croppedAreaPercentages: { x: number; y: number; width: number; height: number };
+};
+
+export type EventImageCropSettings = {
+  eventListItem: ImageContextCropState;
+  orgEventPage: ImageContextCropState;
+  publicEventPage: ImageContextCropState;
+};
+
 export interface ZetkinEvent {
   activity: {
     id: number;
@@ -79,6 +91,7 @@ export interface ZetkinEvent {
   cancelled: string | null;
   contact?: null | { id: number; name: string };
   cover_file: ZetkinFile | null;
+  cover_file_crop?: EventImageCropSettings | null;
   end_time: string;
   id: number;
   info_text: string;

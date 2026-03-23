@@ -13,14 +13,22 @@ import { ZetkinEventWithStatus } from '../types';
 import { removeOffset } from 'utils/dateUtils';
 import { timeSpanToString } from 'zui/utils/timeSpanString';
 import { EventSignupButton } from './EventSignupButton';
+import { EventImageCropSettings } from 'utils/types/zetkin';
+import { cropToStyle } from 'utils/cropUtils';
 
 type Props = {
+  cropContext?: keyof EventImageCropSettings;
   event: ZetkinEventWithStatus;
   href?: string;
   onClickSignUp?: (ev: MouseEvent) => void;
 };
 
-const EventListItem: FC<Props> = ({ event, href, onClickSignUp }) => {
+const EventListItem: FC<Props> = ({
+  cropContext = 'eventListItem',
+  event,
+  href,
+  onClickSignUp,
+}) => {
   const intl = useIntl();
   const messages = useMessages(messageIds);
 
@@ -32,11 +40,15 @@ const EventListItem: FC<Props> = ({ event, href, onClickSignUp }) => {
     />,
   ];
 
+  const cropSetting = event.cover_file_crop?.[cropContext];
+  const imageCropStyle = cropSetting ? cropToStyle(cropSetting) : undefined;
+
   return (
     <MyActivityListItem
       actions={actions}
       href={href}
       image={event.cover_file?.url}
+      imageCropStyle={imageCropStyle}
       info={[
         {
           Icon: GroupWorkOutlined,

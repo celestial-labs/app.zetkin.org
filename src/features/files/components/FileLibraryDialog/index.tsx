@@ -7,12 +7,12 @@ import FilePreview from './FilePreview';
 import messageIds from 'features/files/l10n/messageIds';
 import { TypeOption } from 'features/files/types';
 import { useMessages } from 'core/i18n';
-import { ZetkinFile } from 'utils/types/zetkin';
+import { EventImageCropSettings, ZetkinFile } from 'utils/types/zetkin';
 import ZUIDialog from 'zui/ZUIDialog';
 
 type Props = {
   onClose: () => void;
-  onSelectFile: (file: ZetkinFile) => void;
+  onSelectFile: (file: ZetkinFile, cropSettings: EventImageCropSettings) => void;
   open: boolean;
   orgId: number;
   type?: TypeOption;
@@ -45,7 +45,9 @@ const FileLibraryDialog: FC<Props> = ({
           <FilePreview
             file={selectedFile}
             onBack={() => setSelectedFile(null)}
-            onSelect={() => onSelectFile && onSelectFile(selectedFile)}
+            onSelect={(cropSettings) =>
+              onSelectFile && onSelectFile(selectedFile, cropSettings)
+            }
           />
         )}
         {!selectedFile && (

@@ -36,6 +36,7 @@ import ZUIButton from 'zui/components/ZUIButton';
 import useMyEvents from 'features/my/hooks/useMyEvents';
 import ZUIPublicFooter from 'zui/components/ZUIPublicFooter';
 import useEvent from 'features/events/hooks/useEvent';
+import { cropToStyle } from 'utils/cropUtils';
 import { removeOffset } from 'utils/dateUtils';
 import useUserMemberships from 'features/public/hooks/useUserMemberships';
 import useUser from 'core/hooks/useUser';
@@ -134,6 +135,7 @@ export const PublicEventPage: FC<Props> = ({ eventId, orgId }) => {
                 },
                 height: isMobile ? 200 : 450,
                 marginY: isMobile ? 2 : '',
+                overflow: 'hidden',
                 width: '100%',
               }}
             >
@@ -145,6 +147,9 @@ export const PublicEventPage: FC<Props> = ({ eventId, orgId }) => {
                   height: '100%',
                   objectFit: 'cover',
                   width: '100%',
+                  ...(event.cover_file_crop?.publicEventPage
+                    ? cropToStyle(event.cover_file_crop.publicEventPage)
+                    : {}),
                 }}
                 width={960}
               />

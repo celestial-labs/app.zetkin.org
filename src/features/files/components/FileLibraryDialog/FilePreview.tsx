@@ -1,23 +1,144 @@
 import { FC, useState } from 'react';
-import Image from 'next/image';
-import { Box, Button, Typography } from '@mui/material';
+import Cropper, { Area, MediaSize } from 'react-easy-crop';
+import {
+  Box,
+  Button,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+} from '@mui/material';
 
 import messageIds from 'features/files/l10n/messageIds';
 import { Msg } from 'core/i18n';
 import TransparentGridBackground from '../TransparentGridBackground';
-import { ZetkinFile } from 'utils/types/zetkin';
+import {
+  EventImageCropSettings,
+  ImageContextCropState,
+  ZetkinFile,
+} from 'utils/types/zetkin';
+
+type ViewContext = 'default' | keyof EventImageCropSettings;
+
+type ContextConfig = {
+  label: string;
+  width: number;
+  height: number;
+};
+
+const VIEW_CONTEXTS: Record<keyof EventImageCropSettings, ContextConfig> = {
+  eventListItem: {
+    height: 150,
+    label: 'my/feed: EventListItem',
+    width: 942,
+  },
+  orgEventPage: {
+    height: 150,
+    label: 'o/[orgId]: PublicEventPage',
+    width: 462,
+  },
+  publicEventPage: {
+    height: 450,
+    label: 'o/[eventId]/events: PublicEventPage',
+    width: 960,
+  },
+};
+
+const DEFAULT_CROP_STATE: ImageContextCropState = {
+  crop: { x: 0, y: 0 },
+  croppedAreaPercentages: { height: 100, width: 100, x: 0, y: 0 },
+  zoom: 1,
+};
 
 type Props = {
   file: ZetkinFile;
   onBack: () => void;
-  onSelect: () => void;
+  onSelect: (cropSettings: EventImageCropSettings) => void;
 };
 
 const FilePreview: FC<Props> = ({ file, onBack, onSelect }) => {
   const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
+  const [activeContext, setActiveContext] = useState<ViewContext>('default');
+  const [contextStates, setContextStates] = useState<EventImageCropSettings>({
+    eventListItem: { ...DEFAULT_CROP_STATE },
+    orgEventPage: { ...DEFAULT_CROP_STATE },
+    publicEventPage: { ...DEFAULT_CROP_STATE },
+  });
+
+  const isDefault = activeContext === 'default';
+  const currentState = isDefault
+    ? DEFAULT_CROP_STATE
+    : contextStates[activeContext];
+  const aspectRatio = isDefault
+    ? undefined
+    : VIEW_CONTEXTS[activeContext].width / VIEW_CONTEXTS[activeContext].height;
+
+  const handleContextChange = (
+    _: React.MouseEvent<HTMLElement>,
+    newContext: ViewContext | null
+  ) => {
+    if (newContext !== null) {
+      setActiveContext(newContext);
+    }
+  };
+
+  const handleCropChange = (crop: { x: number; y: number }) => {
+    if (!isDefault) {
+      setContextStates((prev) => ({
+        ...prev,
+        [activeContext]: { ...prev[activeContext as keyof EventImageCropSettings], crop },
+      }));
+    }
+  };
+
+  const handleZoomChange = (zoom: number) => {
+    if (!isDefault) {
+      setContextStates((prev) => ({
+        ...prev,
+        [activeContext]: { ...prev[activeContext as keyof EventImageCropSettings], zoom },
+      }));
+    }
+  };
+
+  const handleCropComplete = (croppedAreaPercentages: Area) => {
+    if (!isDefault) {
+      setContextStates((prev) => ({
+        ...prev,
+        [activeContext]: {
+          ...prev[activeContext as keyof EventImageCropSettings],
+          croppedAreaPercentages,
+        },
+      }));
+    }
+  };
 
   return (
     <Box display="flex" flexDirection="column" height="100%">
+      <Box display="flex" justifyContent="center" mb={1} mt={1}>
+        <ToggleButtonGroup
+          exclusive
+          onChange={handleContextChange}
+          size="small"
+          value={activeContext}
+        >
+          <ToggleButton value="default">Default</ToggleButton>
+          {(
+            Object.entries(VIEW_CONTEXTS) as [
+              keyof EventImageCropSettings,
+              ContextConfig,
+            ][]
+          ).map(([key, ctx]) => (
+            <ToggleButton key={key} value={key}>
+              {ctx.label}
+              <Typography
+                component="span"
+                sx={{ color: 'text.secondary', fontSize: '0.65rem', ml: 0.5 }}
+              >
+                {ctx.width}×{ctx.height}
+              </Typography>
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+      </Box>
       <Box height="100%" my={2} overflow="auto">
         <TransparentGridBackground
           interactive={false}
@@ -26,26 +147,37 @@ const FilePreview: FC<Props> = ({ file, onBack, onSelect }) => {
             position: 'relative',
           }}
         >
-          <Image
-            alt={file.original_name}
-            height="800"
-            onLoad={(e) => {
-              if (e.target instanceof HTMLImageElement) {
-                setDimensions({
-                  height: e.target.naturalHeight,
-                  width: e.target.naturalWidth,
-                });
+          {isDefault ? (
+            <Box
+              alt={file.original_name}
+              component="img"
+              src={file.url}
+              sx={{
+                height: '100%',
+                objectFit: 'contain',
+                width: '100%',
+              }}
+            />
+          ) : (
+            <Cropper
+              key={activeContext}
+              aspect={aspectRatio}
+              crop={currentState.crop}
+              image={file.url}
+              onCropChange={handleCropChange}
+              onCropComplete={(croppedArea: Area, _croppedAreaPixels: Area) =>
+                handleCropComplete(croppedArea)
               }
-            }}
-            src={file.url}
-            style={{
-              height: '100%',
-              objectFit: 'contain',
-              width: '100%',
-            }}
-            unoptimized
-            width="800"
-          />
+              onMediaLoaded={(mediaSize: MediaSize) => {
+                setDimensions({
+                  height: mediaSize.naturalHeight,
+                  width: mediaSize.naturalWidth,
+                });
+              }}
+              onZoomChange={handleZoomChange}
+              zoom={currentState.zoom}
+            />
+          )}
         </TransparentGridBackground>
         <Typography color="secondary" mt={1} textAlign="center" variant="body2">
           {file.original_name}
@@ -63,7 +195,7 @@ const FilePreview: FC<Props> = ({ file, onBack, onSelect }) => {
         </Button>
         <Button
           data-testid="FileLibraryDialog-useButton"
-          onClick={() => onSelect()}
+          onClick={() => onSelect(contextStates)}
           variant="contained"
         >
           <Msg id={messageIds.libraryDialog.preview.useButton} />

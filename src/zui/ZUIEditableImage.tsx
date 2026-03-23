@@ -7,12 +7,12 @@ import FileLibraryDialog from 'features/files/components/FileLibraryDialog';
 import messageIds from './l10n/messageIds';
 import { Msg } from 'core/i18n';
 import { useNumericRouteParams } from 'core/hooks';
-import { ZetkinFile } from 'utils/types/zetkin';
+import { EventImageCropSettings, ZetkinFile } from 'utils/types/zetkin';
 
 interface ZUIEditableImageProps {
   alt: string;
   file: ZetkinFile | null;
-  onFileSelect: (file: ZetkinFile | null) => void;
+  onFileSelect: (file: ZetkinFile | null, cropSettings?: EventImageCropSettings) => void;
 }
 
 const ZUIEditableImage: React.FC<
@@ -86,8 +86,8 @@ const ZUIEditableImage: React.FC<
         onClose={() => {
           setSelecting(false);
         }}
-        onSelectFile={(file) => {
-          onFileSelect(file);
+        onSelectFile={(file, cropSettings) => {
+          onFileSelect(file, cropSettings);
           setSelecting(false);
         }}
         open={selecting}

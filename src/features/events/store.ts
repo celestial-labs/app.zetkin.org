@@ -8,6 +8,7 @@ import {
   RemoteList,
 } from 'utils/storeUtils';
 import {
+  EventImageCropSettings,
   ZetkinActivity,
   ZetkinEvent,
   ZetkinEventParticipant,
@@ -108,7 +109,7 @@ const eventsSlice = createSlice({
       state.allEventsList.isLoading = true;
     },
     allEventsLoaded: (state, action: PayloadAction<ZetkinEvent[]>) => {
-      state.allEventsList = remoteList(action.payload);
+      state.allEventsList = remoteList(action.payload.map(injectTestCrop));
       state.allEventsList.loaded = new Date().toISOString();
     },
     allEventsUnload: (state) => {
@@ -665,7 +666,7 @@ const eventsSlice = createSlice({
       state,
       action: PayloadAction<ZetkinEventWithStatus[]>
     ) => {
-      state.userEventList = remoteList(action.payload);
+      state.userEventList = remoteList(action.payload.map(injectTestCrop));
       state.userEventList.loaded = new Date().toISOString();
     },
     userResponseAdded: (state, action: PayloadAction<ZetkinEvent>) => {
@@ -683,17 +684,63 @@ const eventsSlice = createSlice({
   },
 });
 
+// TODO: Remove TEST_CROP once backend returns cover_file_crop in API response
+const TEST_CROP: EventImageCropSettings = {
+  eventListItem: {
+    crop: { x: -13.299999999999997, y: 132.221875 },
+    croppedAreaPercentages: {
+      height: 6.368972959432797,
+      width: 50,
+      x: 26.605037725464303,
+      y: 34.05124418276701,
+    },
+    zoom: 2,
+  },
+  orgEventPage: {
+    crop: { x: 136.9, y: 273.621875 },
+    croppedAreaPercentages: {
+      height: 12.986087722479859,
+      width: 50,
+      x: 8.2376135287976,
+      y: 17.092391157464064,
+    },
+    zoom: 2,
+  },
+  publicEventPage: {
+    crop: { x: -33, y: -94.5390625 },
+    croppedAreaPercentages: {
+      height: 24.998218865773723,
+      width: 66.66666666666667,
+      x: 21.97656590880422,
+      y: 49.66954830413096,
+    },
+    zoom: 1.5,
+  },
+};
+
+// TODO: Remove injectTestCrop once backend returns cover_file_crop
+function injectTestCrop<T extends ZetkinEvent>(event: T): T {
+  return event.cover_file?.id === 46
+    ? { ...event, cover_file_crop: TEST_CROP }
+    : event;
+}
+
 function addEventToState(state: EventsStoreSlice, events: ZetkinEvent[]) {
   events.forEach((event) => {
     const eventListItem = state.eventList.items.find(
       (item) => item.id == event.id
     );
 
+    const eventToStore = injectTestCrop(event);
+
     if (eventListItem) {
-      eventListItem.data = { ...eventListItem.data, ...event };
+      eventListItem.data = { ...eventListItem.data, ...eventToStore };
     } else {
       state.eventList.items.push(
-        remoteItem(event.id, { data: event, loaded: new Date().toISOString() })
+        remoteItem(event.id, {
+          data: eventToStore,
+          loaded: new Date().toISOString(),
+        })
       );
     }
 

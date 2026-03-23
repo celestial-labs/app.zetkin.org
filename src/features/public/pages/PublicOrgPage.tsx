@@ -365,6 +365,7 @@ const PublicOrgPage: FC<Props> = ({ orgId }) => {
               {eventsByDate[date].map((event) => (
                 <EventListItem
                   key={event.id}
+                  cropContext="orgEventPage"
                   event={event}
                   href={`/o/${event.organization.id}/events/${event.id}`}
                   onClickSignUp={(ev) => {
